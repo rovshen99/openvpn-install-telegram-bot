@@ -268,6 +268,7 @@ function installQuestions() {
 	fi
 	echo ""
 	# Ask the user if they want to enable IPv6 regardless its availability.
+	IPV6_SUPPORT='n'
 	until [[ $IPV6_SUPPORT =~ (y|n) ]]; do
 		read -rp "Do you want to enable IPv6 support (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
 	done
@@ -276,57 +277,60 @@ function installQuestions() {
 	echo "   1) Default: 1194"
 	echo "   2) Custom"
 	echo "   3) Random [49152-65535]"
-	until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
-		read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
-	done
-	case $PORT_CHOICE in
-	1)
-		PORT="1194"
-		;;
-	2)
-		until [[ $PORT =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; do
-			read -rp "Custom port [1-65535]: " -e -i 1194 PORT
-		done
-		;;
-	3)
-		# Generate random number within private ports range
-		PORT=$(shuf -i49152-65535 -n1)
-		echo "Random Port: $PORT"
-		;;
-	esac
-	echo ""
-	echo "What protocol do you want OpenVPN to use?"
-	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
-	echo "   1) UDP"
-	echo "   2) TCP"
-	until [[ $PROTOCOL_CHOICE =~ ^[1-2]$ ]]; do
-		read -rp "Protocol [1-2]: " -e -i 1 PROTOCOL_CHOICE
-	done
-	case $PROTOCOL_CHOICE in
-	1)
-		PROTOCOL="udp"
-		;;
-	2)
-		PROTOCOL="tcp"
-		;;
-	esac
-	echo ""
-	echo "What DNS resolvers do you want to use with the VPN?"
-	echo "   1) Current system resolvers (from /etc/resolv.conf)"
-	echo "   2) Self-hosted DNS Resolver (Unbound)"
-	echo "   3) Cloudflare (Anycast: worldwide)"
-	echo "   4) Quad9 (Anycast: worldwide)"
-	echo "   5) Quad9 uncensored (Anycast: worldwide)"
-	echo "   6) FDN (France)"
-	echo "   7) DNS.WATCH (Germany)"
-	echo "   8) OpenDNS (Anycast: worldwide)"
-	echo "   9) Google (Anycast: worldwide)"
-	echo "   10) Yandex Basic (Russia)"
-	echo "   11) AdGuard DNS (Anycast: worldwide)"
-	echo "   12) NextDNS (Anycast: worldwide)"
-	echo "   13) Custom"
-	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
-		read -rp "DNS [1-12]: " -e -i 11 DNS
+#	until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
+#		read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
+#	done
+	PORT="443"
+#	case $PORT_CHOICE in
+#	1)
+#		PORT="1194"
+#		;;
+#	2)
+#		until [[ $PORT =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; do
+#			read -rp "Custom port [1-65535]: " -e -i 1194 PORT
+#		done
+#		;;
+#	3)
+#		# Generate random number within private ports range
+#		PORT=$(shuf -i49152-65535 -n1)
+#		echo "Random Port: $PORT"
+#		;;
+#	esac
+	PROTOCOL_CHOICE="tcp"
+#	echo ""
+#	echo "What protocol do you want OpenVPN to use?"
+#	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
+#	echo "   1) UDP"
+#	echo "   2) TCP"
+#	until [[ $PROTOCOL_CHOICE =~ ^[1-2]$ ]]; do
+#		read -rp "Protocol [1-2]: " -e -i 1 PROTOCOL_CHOICE
+#	done
+#	case $PROTOCOL_CHOICE in
+#	1)
+#		PROTOCOL="udp"
+#		;;
+#	2)
+#		PROTOCOL="tcp"
+#		;;
+#	esac
+#	echo ""
+#	echo "What DNS resolvers do you want to use with the VPN?"
+#	echo "   1) Current system resolvers (from /etc/resolv.conf)"
+#	echo "   2) Self-hosted DNS Resolver (Unbound)"
+#	echo "   3) Cloudflare (Anycast: worldwide)"
+#	echo "   4) Quad9 (Anycast: worldwide)"
+#	echo "   5) Quad9 uncensored (Anycast: worldwide)"
+#	echo "   6) FDN (France)"
+#	echo "   7) DNS.WATCH (Germany)"
+#	echo "   8) OpenDNS (Anycast: worldwide)"
+#	echo "   9) Google (Anycast: worldwide)"
+#	echo "   10) Yandex Basic (Russia)"
+#	echo "   11) AdGuard DNS (Anycast: worldwide)"
+#	echo "   12) NextDNS (Anycast: worldwide)"
+#	echo "   13) Custom"
+#	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
+#		read -rp "DNS [1-12]: " -e -i 11 DNS
+	DNS="11"
 		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
 			echo ""
 			echo "Unbound is already installed."
@@ -354,12 +358,14 @@ function installQuestions() {
 				fi
 			done
 		fi
-	done
+#	done
+
+	COMPRESSION_ENABLED="n"
 	echo ""
 	echo "Do you want to use compression? It is not recommended since the VORACLE attack makes use of it."
-	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
-		read -rp"Enable compression? [y/n]: " -e -i n COMPRESSION_ENABLED
-	done
+#	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
+#		read -rp"Enable compression? [y/n]: " -e -i n COMPRESSION_ENABLED
+#	done
 	if [[ $COMPRESSION_ENABLED == "y" ]]; then
 		echo "Choose which compression algorithm you want to use: (they are ordered by efficiency)"
 		echo "   1) LZ4-v2"
@@ -386,9 +392,10 @@ function installQuestions() {
 	echo "Note that whatever you choose, all the choices presented in the script are safe. (Unlike OpenVPN's defaults)"
 	echo "See https://github.com/angristan/openvpn-install#security-and-encryption to learn more."
 	echo ""
-	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
-		read -rp "Customize encryption settings? [y/n]: " -e -i n CUSTOMIZE_ENC
-	done
+	CUSTOMIZE_ENC="n"
+#	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
+#		read -rp "Customize encryption settings? [y/n]: " -e -i n CUSTOMIZE_ENC
+#	done
 	if [[ $CUSTOMIZE_ENC == "n" ]]; then
 		# Use default, sane and fast parameters
 		CIPHER="AES-128-GCM"
@@ -408,9 +415,10 @@ function installQuestions() {
 		echo "   4) AES-128-CBC"
 		echo "   5) AES-192-CBC"
 		echo "   6) AES-256-CBC"
-		until [[ $CIPHER_CHOICE =~ ^[1-6]$ ]]; do
-			read -rp "Cipher [1-6]: " -e -i 1 CIPHER_CHOICE
-		done
+		CIPHER_CHOICE=1
+#		until [[ $CIPHER_CHOICE =~ ^[1-6]$ ]]; do
+#			read -rp "Cipher [1-6]: " -e -i 1 CIPHER_CHOICE
+#		done
 		case $CIPHER_CHOICE in
 		1)
 			CIPHER="AES-128-GCM"
@@ -435,9 +443,11 @@ function installQuestions() {
 		echo "Choose what kind of certificate you want to use:"
 		echo "   1) ECDSA (recommended)"
 		echo "   2) RSA"
-		until [[ $CERT_TYPE =~ ^[1-2]$ ]]; do
-			read -rp"Certificate key type [1-2]: " -e -i 1 CERT_TYPE
-		done
+		CERT_TYPE=1
+
+#		until [[ $CERT_TYPE =~ ^[1-2]$ ]]; do
+#			read -rp"Certificate key type [1-2]: " -e -i 1 CERT_TYPE
+#		done
 		case $CERT_TYPE in
 		1)
 			echo ""
@@ -466,9 +476,10 @@ function installQuestions() {
 			echo "   1) 2048 bits (recommended)"
 			echo "   2) 3072 bits"
 			echo "   3) 4096 bits"
-			until [[ $RSA_KEY_SIZE_CHOICE =~ ^[1-3]$ ]]; do
-				read -rp "RSA key size [1-3]: " -e -i 1 RSA_KEY_SIZE_CHOICE
-			done
+			RSA_KEY_SIZE_CHOICE=1
+#			until [[ $RSA_KEY_SIZE_CHOICE =~ ^[1-3]$ ]]; do
+#				read -rp "RSA key size [1-3]: " -e -i 1 RSA_KEY_SIZE_CHOICE
+#			done
 			case $RSA_KEY_SIZE_CHOICE in
 			1)
 				RSA_KEY_SIZE="2048"
@@ -488,9 +499,10 @@ function installQuestions() {
 		1)
 			echo "   1) ECDHE-ECDSA-AES-128-GCM-SHA256 (recommended)"
 			echo "   2) ECDHE-ECDSA-AES-256-GCM-SHA384"
-			until [[ $CC_CIPHER_CHOICE =~ ^[1-2]$ ]]; do
-				read -rp"Control channel cipher [1-2]: " -e -i 1 CC_CIPHER_CHOICE
-			done
+			CC_CIPHER_CHOICE=1
+#			until [[ $CC_CIPHER_CHOICE =~ ^[1-2]$ ]]; do
+#				read -rp"Control channel cipher [1-2]: " -e -i 1 CC_CIPHER_CHOICE
+#			done
 			case $CC_CIPHER_CHOICE in
 			1)
 				CC_CIPHER="TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256"
@@ -578,9 +590,10 @@ function installQuestions() {
 		echo "   1) SHA-256 (recommended)"
 		echo "   2) SHA-384"
 		echo "   3) SHA-512"
-		until [[ $HMAC_ALG_CHOICE =~ ^[1-3]$ ]]; do
-			read -rp "Digest algorithm [1-3]: " -e -i 1 HMAC_ALG_CHOICE
-		done
+		HMAC_ALG_CHOICE=1
+#		until [[ $HMAC_ALG_CHOICE =~ ^[1-3]$ ]]; do
+#			read -rp "Digest algorithm [1-3]: " -e -i 1 HMAC_ALG_CHOICE
+#		done
 		case $HMAC_ALG_CHOICE in
 		1)
 			HMAC_ALG="SHA256"
@@ -597,9 +610,10 @@ function installQuestions() {
 		echo "tls-auth authenticates the packets, while tls-crypt authenticate and encrypt them."
 		echo "   1) tls-crypt (recommended)"
 		echo "   2) tls-auth"
-		until [[ $TLS_SIG =~ [1-2] ]]; do
-			read -rp "Control channel additional security mechanism [1-2]: " -e -i 1 TLS_SIG
-		done
+		TLS_SIG=1
+#		until [[ $TLS_SIG =~ [1-2] ]]; do
+#			read -rp "Control channel additional security mechanism [1-2]: " -e -i 1 TLS_SIG
+#		done
 	fi
 	echo ""
 	echo "Okay, that was all I needed. We are ready to setup your OpenVPN server now."
@@ -786,6 +800,7 @@ server 10.8.0.0 255.255.255.0
 ifconfig-pool-persist ipp.txt" >>/etc/openvpn/server.conf
 
 	# DNS resolvers
+	DNS=11
 	case $DNS in
 	1) # Current system resolvers
 		# Locate the proper resolv.conf
@@ -1057,14 +1072,15 @@ verb 3" >>/etc/openvpn/client-template.txt
 	echo "If you want to add more clients, you simply need to run this script another time!"
 }
 
-function newClient() {
+function newClient(clientParam) {
 	echo ""
 	echo "Tell me a name for the client."
 	echo "The name must consist of alphanumeric character. It may also include an underscore or a dash."
 
-	until [[ $CLIENT =~ ^[a-zA-Z0-9_-]+$ ]]; do
-		read -rp "Client name: " -e CLIENT
-	done
+	CLIENT=clientParam
+#	until [[ $CLIENT =~ ^[a-zA-Z0-9_-]+$ ]]; do
+#		read -rp "Client name: " -e CLIENT
+#	done
 
 	echo ""
 	echo "Do you want to protect the configuration file with a password?"
@@ -1313,9 +1329,9 @@ function manageMenu() {
 	echo "   2) Revoke existing user"
 	echo "   3) Remove OpenVPN"
 	echo "   4) Exit"
-	until [[ $MENU_OPTION =~ ^[1-4]$ ]]; do
-		read -rp "Select an option [1-4]: " MENU_OPTION
-	done
+#	until [[ $MENU_OPTION =~ ^[1-4]$ ]]; do
+#		read -rp "Select an option [1-4]: " MENU_OPTION
+#	done
 
 	case $MENU_OPTION in
 	1)
@@ -1333,6 +1349,8 @@ function manageMenu() {
 	esac
 }
 
+MENU_OPTION=$1
+CLIENT=$2
 # Check for root, TUN, OS...
 initialCheck
 
